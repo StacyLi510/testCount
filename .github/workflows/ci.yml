@@ -19,10 +19,11 @@ jobs:
           node-version: 20
 
       - name: 安装依赖
-        run: npm install
+        run: npm ci
 
       - name: 后端接口测试 (Vitest)
-        run: npm test
+        run: npx vitest run --config server/vitest.config.ts
+        working-directory: server
         env:
           TEST_MODE: 1
 
