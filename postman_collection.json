@@ -1,0 +1,250 @@
+{
+  "info": {
+    "name": "个人记账 API",
+    "description": "记账应用后端接口测试套件。用 Runner 按顺序跑：新增→查单条→修改→删除→查列表→查统计。新增请求会把返回的 id 存入 collection 变量 recordId，后续请求自动使用。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "recordId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "健康检查",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"状态码为 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"返回 status: ok\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.equal(\"ok\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "新增记录",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"expense\",\n  \"amount\": 200,\n  \"category\": \"餐饮\",\n  \"date\": \"2026-07-14\",\n  \"note\": \"runner测试\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/records",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "records"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"新增成功，状态码 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test(\"返回的 data 包含 id\", function () {",
+              "    pm.expect(json.data).to.have.property(\"id\");",
+              "    pm.expect(json.data.id).to.be.a(\"number\");",
+              "});",
+              "// 核心：把新增返回的 id 存入 collection 变量，后续请求自动使用",
+              "pm.collectionVariables.set(\"recordId\", json.data.id);",
+              "console.log(\"新增记录 id = \" + json.data.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "查单条",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/records/{{recordId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "records", "{{recordId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"状态码为 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test(\"查到的就是新增的那条\", function () {",
+              "    pm.expect(json.data.id).to.equal(Number(pm.collectionVariables.get(\"recordId\")));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "修改记录",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"expense\",\n  \"amount\": 88.5,\n  \"category\": \"餐饮\",\n  \"date\": \"2026-07-14\",\n  \"note\": \"改过的备注\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/records/{{recordId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "records", "{{recordId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"修改成功，状态码 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test(\"修改的是新增的那条记录\", function () {",
+              "    pm.expect(json.data.id).to.equal(Number(pm.collectionVariables.get(\"recordId\")));",
+              "});",
+              "pm.test(\"金额已更新为 88.5\", function () {",
+              "    pm.expect(json.data.amount).to.equal(88.5);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "删除记录",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/records/{{recordId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "records", "{{recordId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"删除成功，状态码 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"返回 success: true\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.data.success).to.equal(true);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "查所有记录",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/records",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "records"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"状态码为 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"返回 data 数组\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.data).to.be.an(\"array\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "查统计",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/summary",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "summary"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"状态码为 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test(\"返回余额统计字段完整\", function () {",
+              "    pm.expect(json.data).to.have.property(\"totalIncome\");",
+              "    pm.expect(json.data).to.have.property(\"totalExpense\");",
+              "    pm.expect(json.data).to.have.property(\"balance\");",
+              "});",
+              "pm.test(\"余额 = 总收入 - 总支出\", function () {",
+              "    const d = json.data;",
+              "    pm.expect(d.balance).to.equal(d.totalIncome - d.totalExpense);",
+              "});",
+              "console.log(\"totalIncome=\" + json.data.totalIncome + \" totalExpense=\" + json.data.totalExpense + \" balance=\" + json.data.balance);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}

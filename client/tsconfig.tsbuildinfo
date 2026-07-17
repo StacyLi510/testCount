@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/types.ts","./src/api/records.ts","./src/components/recordform.tsx","./src/components/recordlist.tsx","./src/components/summarycard.tsx","./src/hooks/userecords.ts"],"version":"5.9.3"}

@@ -1,0 +1,22 @@
+{
+  "name": "personal-accounting-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "个人记账应用：React + TypeScript 前端，Node.js + Express + SQLite 后端",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm run dev --workspace server",
+    "dev:client": "npm run dev --workspace client",
+    "build": "npm run build --workspace server && npm run build --workspace client",
+    "start": "npm run start --workspace server"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "concurrently": "^9.1.0",
+    "playwright": "^1.61.1"
+  }
+}

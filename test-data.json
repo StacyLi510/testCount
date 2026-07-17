@@ -1,0 +1,24 @@
+[
+    {
+      "type": "expense",
+      "amount": 200,
+      "category": "餐饮",
+      "date": "2026-07-13",
+      "note": "午饭"
+    },
+    {
+      "type": "expense",
+      "amount": 5000,
+      "category": "房租",
+      "date": "2026-07-01",
+      "note": "7月房租"
+    },
+    {
+      "type": "income",
+      "amount": 15000,
+      "category": "工资",
+      "date": "2026-07-10",
+      "note": "7月工资"
+    }
+  ]
+  

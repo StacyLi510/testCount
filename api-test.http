@@ -1,0 +1,38 @@
+### 健康检查
+GET http://localhost:3001/api/health
+
+### 查所有记录
+GET http://localhost:3001/api/records
+
+### 查统计（余额）
+GET http://localhost:3001/api/summary
+
+### 新增一条记录（支出/餐饮/200）
+POST http://localhost:3001/api/records
+Content-Type: application/json
+
+{
+  "type": "expense",
+  "amount": 111,
+  "category": "餐饮",
+  "date": "2026-07-13",
+  "note": "测试新增"
+}
+
+### 按 id 查单条（把 1 换成实际 id）
+GET http://localhost:3001/api/records/50
+
+### 修改记录（把 1 换成实际 id）
+PUT http://localhost:3001/api/records/50
+Content-Type: application/json
+
+{
+  "type": "expense",
+  "amount": 888.5,
+  "category": "餐饮",
+  "date": "2026-07-13",
+  "note": "改过的备注"
+}
+
+### 删除记录（把 1 换成实际 id）
+DELETE http://localhost:3001/api/records/50
