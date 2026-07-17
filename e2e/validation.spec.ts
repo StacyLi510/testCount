@@ -23,8 +23,8 @@ test('金额填 0 或空，前端报错且不新增', async ({ page, request }) 
   await page.getByRole('button', { name: '添加记录' }).click();
 
   await expect(page.getByText('请输入大于 0 的金额')).toBeVisible();
-  // 列表不应新增任何记录
-  await expect(page.locator('[data-testid^="record-item-"]')).toHaveCount(1);
+  // 列表不应新增任何记录（原本就是空的）
+  await expect(page.locator('[data-testid^="record-item-"]')).toHaveCount(0);
 });
 
 test('空状态提示', async ({ page, request }) => {
