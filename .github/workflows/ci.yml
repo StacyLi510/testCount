@@ -23,6 +23,8 @@ jobs:
 
       - name: 后端接口测试 (Vitest)
         run: npm test
+        env:
+          TEST_MODE: 1
 
       - name: 安装 Playwright 浏览器
         run: npx playwright install --with-deps chromium

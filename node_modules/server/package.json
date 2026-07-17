@@ -7,8 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "test": "cross-env TEST_MODE=1 vitest run",
-    "test:ui": "cross-env TEST_MODE=1 vitest --ui"
+    "test": "vitest run",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",
