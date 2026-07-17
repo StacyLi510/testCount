@@ -22,7 +22,7 @@ jobs:
         run: npm ci
 
       - name: 后端接口测试 (Vitest)
-        run: npx vitest run --config server/vitest.config.ts
+        run: npx vitest run
         working-directory: server
         env:
           TEST_MODE: 1
