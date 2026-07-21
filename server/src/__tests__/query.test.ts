@@ -71,6 +71,6 @@ describe('GET /api/summary', () => {
     const incomeAfter = after.body.data.totalIncome;
 
     // 4. 断言总收入增加了 500
-    expect(incomeAfter).toBe(incomeBefore + 400);
+    expect(incomeAfter).toBe(incomeBefore + 500);
   });
 });
