@@ -1,6 +1,7 @@
 # 依赖
 node_modules/
 .server/node_modules/
+.client/node_modules/
 
 # 数据库（真实数据，不入库）
 *.db
@@ -17,6 +18,8 @@ test-results/
 playwright-report/
 blob-report/
 .playwright/
+coverage/
+testCount.txt
 
 # 日志
 npm-debug.log*
