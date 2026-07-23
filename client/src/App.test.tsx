@@ -32,8 +32,16 @@ vi.mock('./api/records', () => ({
     h.store.push(item);
     return Promise.resolve(item);
   }),
-  updateRecord: vi.fn(() => Promise.resolve({} as RecordItem)),
-  deleteRecord: vi.fn(() => Promise.resolve({ success: true })),
+  updateRecord: vi.fn((id: number, input: RecordInput) => {
+    const idx = h.store.findIndex((r) => r.id === id);
+    if (idx !== -1) h.store[idx] = { ...h.store[idx], ...input };
+    return Promise.resolve(h.store[idx] || ({} as RecordItem));
+  }),
+  deleteRecord: vi.fn((id: number) => {
+    const idx = h.store.findIndex((r) => r.id === id);
+    if (idx !== -1) h.store.splice(idx, 1);
+    return Promise.resolve({ success: true });
+  }),
 }));
 
 beforeEach(() => {
@@ -41,6 +49,7 @@ beforeEach(() => {
   h.store.length = 0;
   h.nextId.value = 1;
   vi.clearAllMocks();
+  vi.unstubAllGlobals(); // 还原被 stub 的全局变量（如 confirm）
 });
 
 describe('App 集成流程', () => {
@@ -115,5 +124,96 @@ describe('App 集成流程', () => {
     expect(await screen.findByText('请输入大于 0 的金额')).toBeInTheDocument();
     // 集成验证：根本没走到后端写接口
     expect(api.createRecord).not.toHaveBeenCalled();
+  });
+
+  test('点击编辑按钮，表单切换为编辑模式，修改金额后保存，列表与汇总联动更新', async () => {
+    h.store.push({
+      id: 1,
+      type: 'expense',
+      amount: 50,
+      category: '餐饮',
+      date: '2026-07-22',
+      note: '午饭',
+    });
+    h.nextId.value = 2;
+
+    render(<App />);
+
+    // 初始：加载完成，1 条支出 50
+    expect(await screen.findByTestId('record-item-1')).toBeInTheDocument();
+    expect(screen.getByTestId('summary-总支出')).toHaveTextContent('¥ 50.00');
+
+    // 点击编辑按钮（data-testid="edit-1"）
+    fireEvent.click(screen.getByTestId('edit-1'));
+
+    // 表单标题变为「编辑记录」，按钮变为「保存修改」
+    expect(screen.getByText('编辑记录')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '保存修改' })).toBeInTheDocument();
+
+    // 清空金额并改为 80
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '80' } });
+
+    // 点击「保存修改」
+    fireEvent.click(screen.getByRole('button', { name: '保存修改' }));
+
+    // 等待刷新完成：编辑结束后按钮从「保存修改」变回「添加记录」
+    expect(await screen.findByRole('button', { name: '添加记录' })).toBeInTheDocument();
+
+    // 汇总联动：金额从 50 变为 80
+    expect(screen.getByTestId('summary-总支出')).toHaveTextContent('¥ 80.00');
+    expect(screen.getByTestId('summary-结余')).toHaveTextContent('¥ -80.00');
+
+    // 集成验证：确实调了 updateRecord 并携带正确参数
+    expect(api.updateRecord).toHaveBeenCalledWith(1, expect.objectContaining({
+      type: 'expense',
+      amount: 80,
+      category: '餐饮',
+    }));
+  });
+
+  test('确认删除后，记录消失且汇总联动更新', async () => {
+    h.store.push({
+      id: 1,
+      type: 'expense',
+      amount: 100,
+      category: '购物',
+      date: '2026-07-20',
+      note: '',
+    });
+    h.store.push({
+      id: 2,
+      type: 'income',
+      amount: 500,
+      category: '工资',
+      date: '2026-07-01',
+      note: '',
+    });
+    h.nextId.value = 3;
+
+    // mock 掉 window.confirm：模拟用户点「确定」
+    vi.stubGlobal('confirm', vi.fn(() => true));
+
+    render(<App />);
+
+    // 初始：2 条记录，支出 100，收入 500，结余 400
+    expect(await screen.findByTestId('record-item-1')).toBeInTheDocument();
+    expect(screen.getByTestId('record-item-2')).toBeInTheDocument();
+    expect(screen.getByText('共 2 条')).toBeInTheDocument();
+    expect(screen.getByTestId('summary-总支出')).toHaveTextContent('¥ 100.00');
+    expect(screen.getByTestId('summary-结余')).toHaveTextContent('¥ 400.00');
+
+    // 点击第 1 条的删除按钮
+    fireEvent.click(screen.getByTestId('delete-1'));
+
+    // 等待 record-item-1 消失
+    await screen.findByText('共 1 条');
+    expect(screen.queryByTestId('record-item-1')).toBeNull();
+
+    // 汇总：支出 0，收入 500，结余 500
+    expect(screen.getByTestId('summary-总支出')).toHaveTextContent('¥ 0.00');
+    expect(screen.getByTestId('summary-结余')).toHaveTextContent('¥ 500.00');
+
+    // 集成验证：deleteRecord 被调用且携带正确 id
+    expect(api.deleteRecord).toHaveBeenCalledWith(1);
   });
 });
